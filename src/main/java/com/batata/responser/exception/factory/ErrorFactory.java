@@ -5,7 +5,7 @@ import com.batata.responser.exception.model.Error;
 
 public class ErrorFactory {
     /**
-     * Create error object from a GenericException, all custom exceptions should pass here
+     * build error object from a GenericException, all custom exceptions should pass here
      *
      * @param generic exception to be converted to list
      * @return Error object
@@ -15,7 +15,7 @@ public class ErrorFactory {
     }
 
     /**
-     * Create error object from a Exception, all non-expected exceptions should pass here
+     * build error object from a Exception, all non-expected exceptions should pass here
      *
      * @param exc exception to be converted to error object
      * @return internal error

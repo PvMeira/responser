@@ -45,12 +45,12 @@ public class ResponseJson2<B, M> {
         }
 
         public ResponseBuilder withBody(@NotNull B body){
-            List values =  new ArrayList<>();
+            data =  new ArrayList<>();
             if(body != null) {
                 if(body instanceof Collections)
-                    values.addAll((List) body);
+                    data.addAll((List) body);
                 else
-                    values.add(body);
+                    data.add(body);
             }
             return this;
         }
