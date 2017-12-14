@@ -21,6 +21,10 @@ public class ResponseJson2<B, M> {
     private final List<Error> errors;
     private final M meta;
 
+    public static ContentStep build(){
+        return new ContentBuilder();
+    }
+
     private ResponseJson2(ContentBuilder builder){
         this.data   = builder.data;
         this.errors = builder.errors;
@@ -28,31 +32,35 @@ public class ResponseJson2<B, M> {
         this.meta   = (builder.meta != null ?  (M) builder.meta : null);
     }
 
-    public static interface ContentStep<B> {
+    public interface ContentStep<B> {
         Build withoutContent();
-        Build withBody(B body);
-        Build withErrors(Error... errors);
+        MetaStep withBody(B body);
+        MetaStep withErrors(Error... errors);
+
     }
 
-    public static interface Build<M>  {
-        ResponseJson2 create();
+    public interface MetaStep<M> {
         Build withMeta(@NotNull M meta);
-
+        ResponseJson2 create();
     }
 
-    public static class ContentBuilder<B, M> implements Build<M>, ContentStep<B> {
+    public interface Build  {
+        ResponseJson2 create();
+    }
+
+    private static class ContentBuilder<B, M> implements ContentStep<B>, MetaStep<M>, Build {
         private List<B> data;
         private List<Error> errors;
         private M meta;
 
-        public ContentBuilder withoutContent(){
+        public Build withoutContent(){
             this.data   = null;
             this.errors = null;
             this.meta   = null;
             return  this;
         }
 
-        public ContentBuilder withBody(@NotNull B body){
+        public MetaStep withBody(@NotNull B body){
             data =  new ArrayList<>();
             if(body != null) {
                 if(body instanceof Collections)
@@ -63,7 +71,7 @@ public class ResponseJson2<B, M> {
             return this;
         }
 
-        public ContentBuilder withErrors(@NotNull Error... errors){
+        public MetaStep withErrors(@NotNull Error... errors){
             data = null;
             this.errors = new ArrayList<Error>(Arrays.asList(errors));
             return this;
@@ -89,7 +97,6 @@ public class ResponseJson2<B, M> {
     public M getMeta() {
         return meta;
     }
-
     @Override
     public String toString() {
         return "ResponseJson2{" +
