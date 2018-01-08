@@ -1,67 +1,108 @@
 package com.batata.responser.model;
 
 import com.batata.responser.exception.model.Error;
-import com.fasterxml.jackson.annotation.JsonInclude;
+
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 /**
- * Class to mapping a object to a formatted json response
+ * Class to make a http body response
+ * @param <B> Body object,  it will be a 'data' element with some fields (B) or a list of errors;
+ * @param <M> Meta object, it will contain a 'meta" element with some information (M);
  *
- * @param <T> body class (data OR error)
- * @param <U> meta class
+ * @see Error - com.batata.responser.exception.model.Error
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class ResponseJson<T, U> {
-    private List<T> data;
-    private List<Error> errors;
-    private U meta;
+//TODO rename it :)
+public class ResponseJson<B, M> {
+    private final List<B> data;
+    private final List<Error> errors;
+    private final M meta;
 
-    public ResponseJson(){
-        data = null;
-        errors = null;
-        meta = null;
+    public static ContentStep build(){
+        return new ContentBuilder();
     }
 
-    public ResponseJson(@NotNull T body) {
-        setBody(body);
+    private ResponseJson(ContentBuilder builder){
+        this.data   = builder.data;
+        this.errors = builder.errors;
+        //TODO is this really necessary?
+        this.meta   = (builder.meta != null ?  (M) builder.meta : null);
     }
 
-    public ResponseJson(@NotNull T body, @NotNull U meta) {
-        setBody(body);
+    public interface ContentStep<B> {
+        Build withoutContent();
+        MetaStep withBody(B body);
+        MetaStep withErrors(Error... errors);
+
     }
 
-    private void setBody(T body) {
-        List values =  new ArrayList<>();
+    public interface MetaStep<M> {
+        Build withMeta(@NotNull M meta);
+        ResponseJson create();
+    }
 
-       if(body != null) {
-            if(body instanceof Collections)
-                values.addAll((List) body);
-             else
-                values.add(body);
+    public interface Build  {
+        ResponseJson create();
+    }
+
+    private static class ContentBuilder<B, M> implements ContentStep<B>, MetaStep<M>, Build {
+        private List<B> data;
+        private List<Error> errors;
+        private M meta;
+
+        public Build withoutContent(){
+            this.data   = null;
+            this.errors = null;
+            this.meta   = null;
+            return  this;
         }
 
-        if(!values.isEmpty()){
-            if(values.get(0) instanceof Error) {
-                errors = values;
-            } else {
-                data = values;
+        public MetaStep withBody(@NotNull B body){
+            data =  new ArrayList<>();
+            if(body != null) {
+                if(body instanceof Collections)
+                    data.addAll((List) body);
+                else
+                    data.add(body);
             }
-        } else {
+            return this;
+        }
+
+        public MetaStep withErrors(@NotNull Error... errors){
             data = null;
+            this.errors = new ArrayList<>(Arrays.asList(errors));
+            return this;
+        }
+
+        public Build withMeta(@NotNull M meta) {
+            this.meta = meta;
+            return this;
+        }
+
+        public ResponseJson create() {
+            return new ResponseJson(this);
         }
     }
 
-    public List<?> getBody(){
-        if(data != null)
-            return  data;
-        else
-            return errors;
+    //get and setters
+    public List<B> getData() {
+        return data;
     }
-
-    public U getMeta() {
+    public List<Error> getErrors() {
+        return errors;
+    }
+    public M getMeta() {
         return meta;
+    }
+    @Override
+    public String toString() {
+        return "ResponseJson2{" +
+                "data=" + data +
+                ", errors=" + errors +
+                ", meta=" + meta +
+                '}';
     }
 }
